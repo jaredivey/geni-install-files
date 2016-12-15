@@ -1,5 +1,5 @@
 #! /bin/bash
-ovs-vsctl add-br br0
+sudo ovs-vsctl add-br br0
 for intf in $(ifconfig -s)
 do
     # Last interface should be controller so don't add to bridge
@@ -20,8 +20,8 @@ do
         ;;
     eth*)
         #echo "Configure $intf"
-        ifconfig $intf 0
-        ovs-vsctl add-port br0 $intf
+        sudo ifconfig $intf 0.0.0.0
+        sudo ovs-vsctl add-port br0 $intf
     ;;
     *)
     ;;
