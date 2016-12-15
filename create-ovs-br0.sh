@@ -15,9 +15,9 @@ do
     eth0)
         #echo "Skip $intf public interface"
         ;;
-    $ETHx)
-        #echo "Skip $intf controller interface"
-        ;;
+    # $ETHx)
+    #    #echo "Skip $intf controller interface"
+    #    ;;
     eth*)
         #echo "Configure $intf"
         sudo ifconfig $intf 0.0.0.0
