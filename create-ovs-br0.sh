@@ -20,7 +20,7 @@ do
         ;;
     eth*)
         #echo "Configure $intf"
-        ifconfig $intf 0
+        #ifconfig $intf 0
         ovs-vsctl add-port br0 $intf
     ;;
     *)
