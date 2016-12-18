@@ -1,5 +1,5 @@
 #! /bin/bash
-#sudo ovs-vsctl add-br br0
+sudo ovs-vsctl add-br br0
 let 'eths=0'
 for intf in $(ifconfig -s)
 do
@@ -24,6 +24,6 @@ do
     ;;
     esac
 done
-#sudo ovs-vsctl set-controller br0 tcp:11.1.1.1:6653
-#sudo ovs-vsctl set-fail-mode br0 secure
+sudo ovs-vsctl set-controller br0 tcp:11.1.1.1:6653
+sudo ovs-vsctl set-fail-mode br0 secure
 #ovs-vsctl list-ports br0
