@@ -15,9 +15,9 @@ do
     eth0)
         #echo "Skip $intf public interface"
         ;;
-    # $ETHx)
-    #    #echo "Skip $intf controller interface"
-    #    ;;
+    $ETHx)
+        #echo "Skip $intf controller interface"
+        ;;
     eth*)
         #echo "Configure $intf"
         sudo ifconfig $intf 0.0.0.0
@@ -27,4 +27,6 @@ do
     ;;
     esac
 done
+sudo ovs-vsctl set-controller br0 tcp:11.1.1.1:6653
+sudo ovs-vsctl set-fail-mode br0 secure
 #ovs-vsctl list-ports br0
