@@ -16,7 +16,7 @@ do
     ethX=eth$intf
     ipaddr=$(ifconfig $ethX | grep "inet addr:" | cut -d: -f2 | awk '{ print $1}')
     case $ipaddr in
-    10.10.1.*)
+    12.10.1.*)
         sudo ifconfig $ethX 0.0.0.0
         sudo ovs-vsctl add-port br0 $ethX
     ;;
