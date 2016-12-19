@@ -16,7 +16,7 @@ do
     ethX=eth$intf
     ipaddr=$(ifconfig $ethX | grep "inet addr:" | cut -d: -f2 | awk '{ print $1}')
     case $ipaddr in
-    12.10.1.*)
+    12.10.*)
         sudo ifconfig $ethX 0.0.0.0
         sudo ovs-vsctl add-port br0 $ethX
     ;;
@@ -24,6 +24,6 @@ do
     ;;
     esac
 done
-sudo ovs-vsctl set-controller br0 tcp:11.1.1.1:6653
+sudo ovs-vsctl set-controller br0 tcp:11.1.1.$1:6653
 sudo ovs-vsctl set-fail-mode br0 secure
 #ovs-vsctl list-ports br0
