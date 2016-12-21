@@ -1,4 +1,6 @@
 #! /bin/bash
+# This file will not be used on the GENI hosts but instead become a scripting
+# file to send iperf commands remotely
 cd /local/geni-install-files
 case $1 in
 # Run client command
