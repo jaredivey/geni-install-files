@@ -11,7 +11,7 @@ then
        #### Run  one-time commands ####
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at iperf
-        sudo chmod +x /local/geni-install-files/run-iperf.sh
-        sudo chmod +x /local/geni-install-files/start-iperf-server.sh
-        sudo at now +1 minute -f /local/geni-install-files/run-iperf.sh
+        sudo echo "sudo iperf -s -p45000 -B10.10.$1.$2 > /local/iperfs.log" > /local/geni-install-files/start-iperf.sh
+        sudo chmod +x /local/geni-install-files/start-iperf.sh
+        sudo at now -f /local/geni-install-files/start-iperf.sh
 fi
