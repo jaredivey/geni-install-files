@@ -14,6 +14,7 @@ then
 fi
 # Set iperf servers to listen on distinct ports for each host so the bind on the client side
 # will not interfere with already bound address/port combination
-sudo echo "sudo iperf -s -p4500$1 -B10.10.$1.$2 > /local/iperfs-$1-$2.log" > /local/geni-install-files/start-iperf-$1-$2.sh
+let port=45000+$1
+sudo echo "sudo iperf -s -p$port -B10.10.$1.$2 > /local/iperfs-$1-$2.log" > /local/geni-install-files/start-iperf-$1-$2.sh
 sudo chmod +x /local/geni-install-files/start-iperf-$1-$2.sh
 sudo at now -f /local/geni-install-files/start-iperf-$1-$2.sh
