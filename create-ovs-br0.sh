@@ -1,5 +1,6 @@
 #! /bin/bash
 sudo ovs-vsctl add-br br0
+sudo ovs-vsctl set bridge br0 protocols=OpenFlow13
 let 'eths=0'
 for intf in $(ifconfig -s)
 do
