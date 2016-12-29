@@ -1,0 +1,35 @@
+diff --git a/include/openvswitch/flow.h b/include/openvswitch/flow.h
+index df80dfe..7713f69 100644
+--- a/include/openvswitch/flow.h
++++ b/include/openvswitch/flow.h
+@@ -59,7 +59,7 @@ BUILD_ASSERT_DECL(FLOW_TNL_F_OAM == NX_TUN_FLAG_OAM);
+ const char *flow_tun_flag_to_string(uint32_t flags);
+ 
+ /* Maximum number of supported MPLS labels. */
+-#define FLOW_MAX_MPLS_LABELS 3
++#define FLOW_MAX_MPLS_LABELS 10
+ 
+ /*
+  * A flow in the network.
+@@ -135,7 +135,7 @@ BUILD_ASSERT_DECL(sizeof(struct flow_tnl) % sizeof(uint64_t) == 0);
+ 
+ /* Remember to update FLOW_WC_SEQ when changing 'struct flow'. */
+ BUILD_ASSERT_DECL(offsetof(struct flow, igmp_group_ip4) + sizeof(uint32_t)
+-                  == sizeof(struct flow_tnl) + 248
++                  == sizeof(struct flow_tnl) + 248 + 24
+                   && FLOW_WC_SEQ == 36);
+ 
+ /* Incremental points at which flow classification may be performed in
+diff --git a/lib/packets.h b/lib/packets.h
+index 0f1ad19..4731ebb 100644
+--- a/lib/packets.h
++++ b/lib/packets.h
+@@ -332,7 +332,7 @@ ovs_be32 set_mpls_lse_values(uint8_t ttl, uint8_t tc, uint8_t bos,
+ #define ETH_TYPE_IPV6          0x86dd
+ #define ETH_TYPE_LACP          0x8809
+ #define ETH_TYPE_RARP          0x8035
+-#define ETH_TYPE_MPLS          0x8847
++#define ETH_TYPE_MPLS          0x8850
+ #define ETH_TYPE_MPLS_MCAST    0x8848
+ 
+ static inline bool eth_type_mpls(ovs_be16 eth_type)
