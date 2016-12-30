@@ -1,0 +1,43 @@
+diff --git a/etc/ryu/ryu.conf b/etc/ryu/ryu.conf
+index 077a5cc..c0d78bf 100644
+--- a/etc/ryu/ryu.conf
++++ b/etc/ryu/ryu.conf
+@@ -4,5 +4,7 @@
+ 
+ #wsapi_host=<hostip>
+ #wsapi_port=<port:8080>
+-#ofp_listen_host=<hostip>
+-#ofp_tcp_listen_port=<port:6633>
++ofp_listen_host=0.0.0.0
++ofp_tcp_listen_port=6653
++observe_links=True
++explicit_drop=False
+diff --git a/ryu/lib/packet/ether_types.py b/ryu/lib/packet/ether_types.py
+index e8287d3..cf76e93 100644
+--- a/ryu/lib/packet/ether_types.py
++++ b/ryu/lib/packet/ether_types.py
+@@ -20,9 +20,9 @@ ETH_TYPE_TEB = 0x6558
+ ETH_TYPE_8021Q = 0x8100
+ ETH_TYPE_IPV6 = 0x86dd
+ ETH_TYPE_SLOW = 0x8809
+-ETH_TYPE_MPLS = 0x8847
++ETH_TYPE_MPLS = 0x8850
+ ETH_TYPE_8021AD = 0x88a8
+-ETH_TYPE_LLDP = 0x88cc
++ETH_TYPE_LLDP = 0x8849
+ ETH_TYPE_8021AH = 0x88e7
+ ETH_TYPE_IEEE802_3 = 0x05dc
+ ETH_TYPE_CFM = 0x8902
+diff --git a/ryu/lib/packet/lldp.py b/ryu/lib/packet/lldp.py
+index 9542519..8914d4c 100644
+--- a/ryu/lib/packet/lldp.py
++++ b/ryu/lib/packet/lldp.py
+@@ -46,7 +46,7 @@ from ryu.lib.packet import packet_base
+ 
+ 
+ # LLDP destination MAC address
+-LLDP_MAC_NEAREST_BRIDGE = '01:80:c2:00:00:0e'
++LLDP_MAC_NEAREST_BRIDGE = '01:80:c2:12:00:0e'
+ LLDP_MAC_NEAREST_NON_TPMR_BRIDGE = '01:80:c2:00:00:03'
+ LLDP_MAC_NEAREST_CUSTOMER_BRIDGE = '01:80:c2:00:00:00'
+ 
