@@ -29,7 +29,7 @@ index 0f1ad19..4731ebb 100644
  #define ETH_TYPE_LACP          0x8809
  #define ETH_TYPE_RARP          0x8035
 -#define ETH_TYPE_MPLS          0x8847
-+#define ETH_TYPE_MPLS          0x8850
++#define ETH_TYPE_MPLS          0x8847
  #define ETH_TYPE_MPLS_MCAST    0x8848
  
  static inline bool eth_type_mpls(ovs_be16 eth_type)
