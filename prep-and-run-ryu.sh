@@ -8,22 +8,28 @@ then
        #### Create the file ####
         sh -i -c `sudo touch "./installed-ctrl-deps.txt"`
         sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at mercurial libreadline-dev texinfo libbz2-dev
         sudo hg clone https://hg.python.org/cpython -u v2.7.13
         cd /local/cpython
         sudo ./configure
         sudo make
         sudo make install
+        # Python install may not fully complete
+        sudo ln -sf /usr/local/bin/python2.7 /usr/local/bin/python
+        sudo mkdir -p /usr/local/lib/python2.7/lib-dynload
+        sudo cp /local/cpython/build/lib.linux-x86_64-2.7/* /usr/local/lib/python2.7/lib-dynload/
+        sudo cp /local/cpython/Include/* /usr/local/include/python2.7/
+        sudo cp /local/cpython/pyconfig.h /usr/local/include/python2.7/
         cd /local
         sudo wget https://bootstrap.pypa.io/get-pip.py
         sudo python get-pip.py
         sudo pip -q install eventlet routes webob paramiko babel debtcollector pytz pbr wrapt oslo.config oslo.i18n netaddr rfc3986 repoze.lru tinyrpc
-        sudo git clone git://github.com/osrg/ryu.git /local/geni-install-files/ryu
+        sudo git clone https://github.com/osrg/ryu.git /local/geni-install-files/ryu
         cd /local/geni-install-files/ryu
         patch -p1 -i ../ryu.patch
         sudo python ./setup.py install
         cd /local/geni-install-files
-        sudo git clone git://github.com/jaredivey/dce-python-sdn /local/geni-install-files/dce-python-sdn
+        sudo git clone https://github.com/jaredivey/dce-python-sdn /local/geni-install-files/dce-python-sdn
         sudo ln -s /local/geni-install-files/dce-python-sdn/nix_simple.py /local/geni-install-files/ryu/ryu/app/nix_simple.py
         sudo ln -s /local/geni-install-files/dce-python-sdn/nix_mpls_geni.py /local/geni-install-files/ryu/ryu/app/nix_mpls_geni.py
         sudo chmod +x /local/geni-install-files/run-ryu.sh
