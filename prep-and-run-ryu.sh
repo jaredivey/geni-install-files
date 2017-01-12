@@ -11,6 +11,7 @@ then
         sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at mercurial libreadline-dev texinfo libbz2-dev
         sudo hg clone https://hg.python.org/cpython -u v2.7.13
         cd /local/cpython
+        sudo patch -p1 -i /local/geni-install-files/python.patch
         sudo ./configure
         sudo make
         sudo make install
