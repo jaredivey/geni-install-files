@@ -12,6 +12,72 @@ index 077a5cc..c0d78bf 100644
 +ofp_tcp_listen_port=6653
 +observe_links=True
 +explicit_drop=False
+diff --git a/ryu/app/simple_switch_13.py b/ryu/app/simple_switch_13.py
+index 3e7c598..5f36960 100644
+--- a/ryu/app/simple_switch_13.py
++++ b/ryu/app/simple_switch_13.py
+@@ -22,6 +22,7 @@ from ryu.lib.packet import packet
+ from ryu.lib.packet import ethernet
+ from ryu.lib.packet import ether_types
+ 
++import time, cProfile, pstats, StringIO
+ 
+ class SimpleSwitch13(app_manager.RyuApp):
+     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
+@@ -65,6 +66,8 @@ class SimpleSwitch13(app_manager.RyuApp):
+ 
+     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+     def _packet_in_handler(self, ev):
++        pr,start = self.enableProf()
++
+         # If you hit this you might want to increase
+         # the "miss_send_length" of your switch
+         if ev.msg.msg_len < ev.msg.total_len:
+@@ -81,6 +84,7 @@ class SimpleSwitch13(app_manager.RyuApp):
+ 
+         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+             # ignore lldp packet
++            self.disableProf(pr, start, "LLDP")
+             return
+         dst = eth.dst
+         src = eth.src
+@@ -88,7 +92,7 @@ class SimpleSwitch13(app_manager.RyuApp):
+         dpid = datapath.id
+         self.mac_to_port.setdefault(dpid, {})
+ 
+-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
++        #self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+ 
+         # learn a mac address to avoid FLOOD next time.
+         self.mac_to_port[dpid][src] = in_port
+@@ -107,6 +111,8 @@ class SimpleSwitch13(app_manager.RyuApp):
+             # flow_mod & packet_out
+             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
++
++                self.disableProf(pr, start, "VALID BUFFER")
+                 return
+             else:
+                 self.add_flow(datapath, 1, match, actions)
+@@ -117,3 +123,18 @@ class SimpleSwitch13(app_manager.RyuApp):
+         out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
+                                   in_port=in_port, actions=actions, data=data)
+         datapath.send_msg(out)
++
++        self.disableProf(pr, start, "COMPLETE")
++
++    def enableProf(self):
++        pr = cProfile.Profile()
++        pr.enable()
++        return pr,time.clock()
++
++    def disableProf(self, pr, start, whichcase):
++        completion = time.clock() - start
++        pr.disable()
++        s = StringIO.StringIO()
++        ps = pstats.Stats(pr, stream=s)
++        ps.print_stats(0)
++        self.logger.info("%s\t%f\t%s", whichcase, completion, s.getvalue())
 diff --git a/ryu/lib/packet/ether_types.py b/ryu/lib/packet/ether_types.py
 index e8287d3..2b82960 100644
 --- a/ryu/lib/packet/ether_types.py
@@ -39,10 +105,18 @@ index 9542519..8914d4c 100644
  LLDP_MAC_NEAREST_CUSTOMER_BRIDGE = '01:80:c2:00:00:00'
  
 diff --git a/ryu/topology/switches.py b/ryu/topology/switches.py
-index 644a1fe..a2ad75c 100644
+index 644a1fe..e1240a4 100644
 --- a/ryu/topology/switches.py
 +++ b/ryu/topology/switches.py
-@@ -136,10 +136,11 @@ class Switch(object):
+@@ -39,6 +39,7 @@ from ryu.ofproto import ofproto_v1_2
+ from ryu.ofproto import ofproto_v1_3
+ from ryu.ofproto import ofproto_v1_4
+ 
++import cProfile, pstats, StringIO
+ 
+ LOG = logging.getLogger(__name__)
+ 
+@@ -136,10 +137,11 @@ class Switch(object):
  
  class Link(object):
      # This is data class passed by EventLinkXXX
@@ -55,7 +129,7 @@ index 644a1fe..a2ad75c 100644
  
      def to_dict(self):
          d = {'src': self.src.to_dict(),
-@@ -157,7 +158,7 @@ class Link(object):
+@@ -157,7 +159,7 @@ class Link(object):
          return hash((self.src, self.dst))
  
      def __str__(self):
@@ -64,7 +138,7 @@ index 644a1fe..a2ad75c 100644
  
  
  class Host(object):
-@@ -381,14 +382,14 @@ class LinkState(dict):
+@@ -381,14 +383,14 @@ class LinkState(dict):
      def get_peer(self, src):
          return self._map.get(src, None)
  
@@ -82,7 +156,31 @@ index 644a1fe..a2ad75c 100644
          return rev_link in self
  
      def link_down(self, link):
-@@ -807,12 +808,16 @@ class Switches(app_manager.RyuApp):
+@@ -776,6 +778,7 @@ class Switches(app_manager.RyuApp):
+             # This handler can receive all the packets which can be
+             # not-LLDP packet. Ignore it silently
+             return
++        pr,start = self.enableProf()
+ 
+         dst_dpid = msg.datapath.id
+         if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+@@ -788,6 +791,7 @@ class Switches(app_manager.RyuApp):
+ 
+         src = self._get_port(src_dpid, src_port_no)
+         if not src or src.dpid == dst_dpid:
++            self.disableProf(pr,start,"LLDPNSRC")
+             return
+         try:
+             self.ports.lldp_received(src)
+@@ -800,6 +804,7 @@ class Switches(app_manager.RyuApp):
+ 
+         dst = self._get_port(dst_dpid, dst_port_no)
+         if not dst:
++            self.disableProf(pr,start,"LLDPNDST")
+             return
+ 
+         old_peer = self.links.get_peer(src)
+@@ -807,12 +812,16 @@ class Switches(app_manager.RyuApp):
          # LOG.debug("  src=%s", src)
          # LOG.debug("  dst=%s", dst)
          # LOG.debug("  old_peer=%s", old_peer)
@@ -101,7 +199,7 @@ index 644a1fe..a2ad75c 100644
          if link not in self.links:
              self.send_event_to_observers(event.EventLinkAdd(link))
  
-@@ -825,7 +830,7 @@ class Switches(app_manager.RyuApp):
+@@ -825,13 +834,14 @@ class Switches(app_manager.RyuApp):
              for host_mac in host_to_del:
                  del self.hosts[host_mac]
  
@@ -110,3 +208,113 @@ index 644a1fe..a2ad75c 100644
              # reverse link is not detected yet.
              # So schedule the check early because it's very likely it's up
              self.ports.move_front(dst)
+             self.lldp_event.set()
+         if self.explicit_drop:
+             self._drop_packet(msg)
++        self.disableProf(pr,start,"LLDPPKTI")
+ 
+     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+     def host_discovery_packet_in_handler(self, ev):
+@@ -841,6 +851,7 @@ class Switches(app_manager.RyuApp):
+         # ignore lldp and cfm packets
+         if eth.ethertype in (ETH_TYPE_LLDP, ETH_TYPE_CFM):
+             return
++        pr,start = self.enableProf()
+ 
+         datapath = msg.datapath
+         dpid = datapath.id
+@@ -855,9 +866,11 @@ class Switches(app_manager.RyuApp):
+ 
+         # can't find this port(ex: logic port)
+         if not port:
++            self.disableProf(pr,start,"HSTDSCNP")
+             return
+         # ignore switch-to-switch port
+         if not self._is_edge_port(port):
++            self.disableProf(pr,start,"HSTDSCNE")
+             return
+ 
+         host_mac = eth.src
+@@ -883,6 +896,7 @@ class Switches(app_manager.RyuApp):
+             # TODO: need to handle NDP
+             ipv6_pkt, _, _ = pkt_type.parser(pkt_data)
+             self.hosts.update_ip(host, ip_v6=ipv6_pkt.src)
++        self.disableProf(pr,start,"HOSTDISC")
+ 
+     def send_lldp_packet(self, port):
+         try:
+@@ -916,6 +930,7 @@ class Switches(app_manager.RyuApp):
+                       dp.ofproto.OFP_VERSION)
+ 
+     def lldp_loop(self):
++        pr,start = self.enableProf()
+         while self.is_active:
+             self.lldp_event.clear()
+ 
+@@ -946,8 +961,10 @@ class Switches(app_manager.RyuApp):
+                 timeout = 0     # We have already slept
+             # LOG.debug('lldp sleep %s', timeout)
+             self.lldp_event.wait(timeout=timeout)
++        self.disableProf(pr,start,"LLDPLOOP")
+ 
+     def link_loop(self):
++        pr,start = self.enableProf()
+         while self.is_active:
+             self.link_event.clear()
+ 
+@@ -980,9 +997,11 @@ class Switches(app_manager.RyuApp):
+                         self.lldp_event.set()
+ 
+             self.link_event.wait(timeout=self.TIMEOUT_CHECK_PERIOD)
++        self.disableProf(pr,start,"LINKLOOP")
+ 
+     @set_ev_cls(event.EventSwitchRequest)
+     def switch_request_handler(self, req):
++        pr,start = self.enableProf()
+         # LOG.debug(req)
+         dpid = req.dpid
+ 
+@@ -997,8 +1016,11 @@ class Switches(app_manager.RyuApp):
+         rep = event.EventSwitchReply(req.src, switches)
+         self.reply_to_request(req, rep)
+ 
++        self.disableProf(pr,start,"SWCHREQ")
++
+     @set_ev_cls(event.EventLinkRequest)
+     def link_request_handler(self, req):
++        pr,start = self.enableProf()
+         # LOG.debug(req)
+         dpid = req.dpid
+ 
+@@ -1008,9 +1030,12 @@ class Switches(app_manager.RyuApp):
+             links = [link for link in self.links if link.src.dpid == dpid]
+         rep = event.EventLinkReply(req.src, dpid, links)
+         self.reply_to_request(req, rep)
++        self.disableProf(pr,start,"LINKREQ")
+ 
+     @set_ev_cls(event.EventHostRequest)
+     def host_request_handler(self, req):
++        pr,start = self.enableProf()
++
+         dpid = req.dpid
+         hosts = []
+         if dpid is None:
+@@ -1021,3 +1046,18 @@ class Switches(app_manager.RyuApp):
+ 
+         rep = event.EventHostReply(req.src, dpid, hosts)
+         self.reply_to_request(req, rep)
++
++        self.disableProf(pr,start,"HOSTREQ")
++
++    def enableProf(self):
++        pr = cProfile.Profile()
++        pr.enable()
++        return pr,time.clock()
++
++    def disableProf(self,pr,start,whichcase):
++        completion = time.clock() - start
++        pr.disable()
++        s = StringIO.StringIO()
++        ps = pstats.Stats(pr, stream=s)
++        ps.print_stats(0)
++        self.logger.info("%s\t%f\t%s", whichcase, completion, s.getvalue())

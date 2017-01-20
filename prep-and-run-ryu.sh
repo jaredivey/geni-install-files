@@ -8,7 +8,7 @@ then
        #### Create the file ####
         sh -i -c `sudo touch "./installed-ctrl-deps.txt"`
         sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at mercurial libreadline-dev texinfo libbz2-dev
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at mercurial libreadline-dev texinfo libbz2-dev openjdk-7-jdk ant maven
         sudo hg clone https://hg.python.org/cpython -u v2.7.13
         cd /local/cpython
         sudo patch -p1 -i /local/geni-install-files/python.patch
@@ -33,6 +33,12 @@ then
         sudo git clone https://github.com/jaredivey/dce-python-sdn /local/geni-install-files/dce-python-sdn
         sudo ln -s /local/geni-install-files/dce-python-sdn/nix_simple.py /local/geni-install-files/ryu/ryu/app/nix_simple.py
         sudo ln -s /local/geni-install-files/dce-python-sdn/nix_mpls_geni.py /local/geni-install-files/ryu/ryu/app/nix_mpls_geni.py
-        sudo chmod +x /local/geni-install-files/run-ryu.sh
-        sudo at now +1 minute -f /local/geni-install-files/run-ryu.sh
+        #sudo chmod +x /local/geni-install-files/run-ryu.sh
+        #sudo at now +1 minute -f /local/geni-install-files/run-ryu.sh
+
+        sudo git clone https://github.com/floodlight/floodlight /local/geni-install-files/floodlight -bv1.2
+        cd /local/geni-install-files/floodlight
+        sudo git submodule init
+        sudo git submodule update
+        sudo ant
 fi
