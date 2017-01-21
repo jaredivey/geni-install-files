@@ -9,6 +9,12 @@ then
         sh -i -c `sudo touch "./installed-ovs-deps.txt"`
 
        #### Run  one-time commands ####
+        # Quit current OVS
+        sudo pkill ovsdb-server
+        sudo pkill ovs-vswitchd
+        sudo rm -f /etc/openvswitch/conf.db
+        sudo rm -f /usr/local/openvswitch/conf.db
+
         sudo git clone https://github.com/openvswitch/ovs /local/ovs
         cd /local/ovs
         sudo patch -p1 -i /local/geni-install-files/ovs.patch
