@@ -13,7 +13,7 @@ then
         sudo pkill ovsdb-server
         sudo pkill ovs-vswitchd
         sudo rm -f /etc/openvswitch/conf.db
-        sudo rm -f /usr/local/openvswitch/conf.db
+        sudo rm -f /usr/local/etc/openvswitch/conf.db
 
         sudo git clone https://github.com/openvswitch/ovs /local/ovs
         cd /local/ovs
