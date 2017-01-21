@@ -29,8 +29,9 @@ fi
 #sudo ovs-vsctl --no-wait init
 #sudo ovs-vswitchd --pidfile --detach --log-file
 
-if [ ! -f "./installed-ovs-deps.txt" ]
+if [ ! -f "./create-ovs-br0.txt" ]
 then
+        sh -i -c `sudo touch "./create-ovs-br0.txt"`
         sudo chmod +x /local/geni-install-files/create-ovs-br0.sh
         sudo bash /local/geni-install-files/create-ovs-br0.sh $1
 fi
