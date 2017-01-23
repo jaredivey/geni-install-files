@@ -1,7 +1,7 @@
 #! /bin/bash
 sudo ovs-vsctl add-br br0
-#sudo ovs-vsctl set bridge br0 datapath_type=netdev protocols=OpenFlow10,OpenFlow13
-sudo ovs-vsctl set bridge br0 protocols=OpenFlow10,OpenFlow13
+sudo ovs-vsctl set bridge br0 datapath_type=netdev protocols=OpenFlow10,OpenFlow13
+#sudo ovs-vsctl set bridge br0 protocols=OpenFlow10,OpenFlow13
 #sudo ifconfig br0 192.168.1.$1/24 up promisc multicast
 # Determine number of Ethernet interfaces
 let 'eths=0'

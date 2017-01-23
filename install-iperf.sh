@@ -10,7 +10,7 @@ then
 
        #### Run  one-time commands ####
         sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at iperf
+        sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install at iperf wireshark
 fi
 # Set iperf servers to listen on distinct ports for each host so the bind on the client side
 # will not interfere with already bound address/port combination
