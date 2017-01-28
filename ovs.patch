@@ -7,7 +7,7 @@ index df80dfe..7713f69 100644
  
  /* Maximum number of supported MPLS labels. */
 -#define FLOW_MAX_MPLS_LABELS 3
-+#define FLOW_MAX_MPLS_LABELS 10
++#define FLOW_MAX_MPLS_LABELS 14
  
  /*
   * A flow in the network.
@@ -16,7 +16,7 @@ index df80dfe..7713f69 100644
  /* Remember to update FLOW_WC_SEQ when changing 'struct flow'. */
  BUILD_ASSERT_DECL(offsetof(struct flow, igmp_group_ip4) + sizeof(uint32_t)
 -                  == sizeof(struct flow_tnl) + 248
-+                  == sizeof(struct flow_tnl) + 248 + 24
++                  == sizeof(struct flow_tnl) + 248 + 40
                    && FLOW_WC_SEQ == 36);
  
  /* Incremental points at which flow classification may be performed in
