@@ -35,6 +35,7 @@ sudo ovsdb-server --remote=punix:/usr/local/var/run/openvswitch/db.sock \
 sudo ovs-vsctl --no-wait init
 sudo ovs-vswitchd --pidfile --detach --log-file
 
+cd /local
 if [ ! -f "./create-ovs-br0.txt" ]
 then
         sh -i -c `sudo touch "./create-ovs-br0.txt"`
