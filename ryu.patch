@@ -105,7 +105,7 @@ index 9542519..8914d4c 100644
  LLDP_MAC_NEAREST_CUSTOMER_BRIDGE = '01:80:c2:00:00:00'
  
 diff --git a/ryu/topology/switches.py b/ryu/topology/switches.py
-index 644a1fe..e1240a4 100644
+index 644a1fe..d348187 100644
 --- a/ryu/topology/switches.py
 +++ b/ryu/topology/switches.py
 @@ -39,6 +39,7 @@ from ryu.ofproto import ofproto_v1_2
@@ -138,7 +138,7 @@ index 644a1fe..e1240a4 100644
  
  
  class Host(object):
-@@ -381,14 +383,14 @@ class LinkState(dict):
+@@ -381,14 +383,17 @@ class LinkState(dict):
      def get_peer(self, src):
          return self._map.get(src, None)
  
@@ -146,6 +146,9 @@ index 644a1fe..e1240a4 100644
 -        link = Link(src, dst)
 +    def update_link(self, src, dst, delay):
 +        link = Link(src, dst, delay)
++
++        if link in self:
++            del self[link]
  
          self[link] = time.time()
          self._map[src] = dst
@@ -156,7 +159,7 @@ index 644a1fe..e1240a4 100644
          return rev_link in self
  
      def link_down(self, link):
-@@ -776,6 +778,7 @@ class Switches(app_manager.RyuApp):
+@@ -776,6 +781,7 @@ class Switches(app_manager.RyuApp):
              # This handler can receive all the packets which can be
              # not-LLDP packet. Ignore it silently
              return
@@ -164,7 +167,7 @@ index 644a1fe..e1240a4 100644
  
          dst_dpid = msg.datapath.id
          if msg.datapath.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
-@@ -788,6 +791,7 @@ class Switches(app_manager.RyuApp):
+@@ -788,6 +794,7 @@ class Switches(app_manager.RyuApp):
  
          src = self._get_port(src_dpid, src_port_no)
          if not src or src.dpid == dst_dpid:
@@ -172,7 +175,7 @@ index 644a1fe..e1240a4 100644
              return
          try:
              self.ports.lldp_received(src)
-@@ -800,6 +804,7 @@ class Switches(app_manager.RyuApp):
+@@ -800,6 +807,7 @@ class Switches(app_manager.RyuApp):
  
          dst = self._get_port(dst_dpid, dst_port_no)
          if not dst:
@@ -180,13 +183,7 @@ index 644a1fe..e1240a4 100644
              return
  
          old_peer = self.links.get_peer(src)
-@@ -807,12 +812,16 @@ class Switches(app_manager.RyuApp):
-         # LOG.debug("  src=%s", src)
-         # LOG.debug("  dst=%s", dst)
-         # LOG.debug("  old_peer=%s", old_peer)
--        if old_peer and old_peer != dst:
-+        if old_peer: # and old_peer != dst:
-             old_link = Link(src, old_peer)
+@@ -812,7 +820,11 @@ class Switches(app_manager.RyuApp):
              del self.links[old_link]
              self.send_event_to_observers(event.EventLinkDelete(old_link))
  
@@ -194,12 +191,12 @@ index 644a1fe..e1240a4 100644
 +        if self.ports.get_port(src).timestamp:
 +            delay = time.time() - self.ports.get_port(src).timestamp
 +        else:
-+            delay = time.time()
++            delay = 0
 +        link = Link(src, dst, delay)
          if link not in self.links:
              self.send_event_to_observers(event.EventLinkAdd(link))
  
-@@ -825,13 +834,14 @@ class Switches(app_manager.RyuApp):
+@@ -825,13 +837,14 @@ class Switches(app_manager.RyuApp):
              for host_mac in host_to_del:
                  del self.hosts[host_mac]
  
@@ -215,7 +212,7 @@ index 644a1fe..e1240a4 100644
  
      @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
      def host_discovery_packet_in_handler(self, ev):
-@@ -841,6 +851,7 @@ class Switches(app_manager.RyuApp):
+@@ -841,6 +854,7 @@ class Switches(app_manager.RyuApp):
          # ignore lldp and cfm packets
          if eth.ethertype in (ETH_TYPE_LLDP, ETH_TYPE_CFM):
              return
@@ -223,7 +220,7 @@ index 644a1fe..e1240a4 100644
  
          datapath = msg.datapath
          dpid = datapath.id
-@@ -855,9 +866,11 @@ class Switches(app_manager.RyuApp):
+@@ -855,9 +869,11 @@ class Switches(app_manager.RyuApp):
  
          # can't find this port(ex: logic port)
          if not port:
@@ -235,7 +232,7 @@ index 644a1fe..e1240a4 100644
              return
  
          host_mac = eth.src
-@@ -883,6 +896,7 @@ class Switches(app_manager.RyuApp):
+@@ -883,6 +899,7 @@ class Switches(app_manager.RyuApp):
              # TODO: need to handle NDP
              ipv6_pkt, _, _ = pkt_type.parser(pkt_data)
              self.hosts.update_ip(host, ip_v6=ipv6_pkt.src)
@@ -243,7 +240,7 @@ index 644a1fe..e1240a4 100644
  
      def send_lldp_packet(self, port):
          try:
-@@ -916,6 +930,7 @@ class Switches(app_manager.RyuApp):
+@@ -916,6 +933,7 @@ class Switches(app_manager.RyuApp):
                        dp.ofproto.OFP_VERSION)
  
      def lldp_loop(self):
@@ -251,7 +248,7 @@ index 644a1fe..e1240a4 100644
          while self.is_active:
              self.lldp_event.clear()
  
-@@ -946,8 +961,10 @@ class Switches(app_manager.RyuApp):
+@@ -946,8 +964,10 @@ class Switches(app_manager.RyuApp):
                  timeout = 0     # We have already slept
              # LOG.debug('lldp sleep %s', timeout)
              self.lldp_event.wait(timeout=timeout)
@@ -262,7 +259,7 @@ index 644a1fe..e1240a4 100644
          while self.is_active:
              self.link_event.clear()
  
-@@ -980,9 +997,11 @@ class Switches(app_manager.RyuApp):
+@@ -980,9 +1000,11 @@ class Switches(app_manager.RyuApp):
                          self.lldp_event.set()
  
              self.link_event.wait(timeout=self.TIMEOUT_CHECK_PERIOD)
@@ -274,7 +271,7 @@ index 644a1fe..e1240a4 100644
          # LOG.debug(req)
          dpid = req.dpid
  
-@@ -997,8 +1016,11 @@ class Switches(app_manager.RyuApp):
+@@ -997,8 +1019,11 @@ class Switches(app_manager.RyuApp):
          rep = event.EventSwitchReply(req.src, switches)
          self.reply_to_request(req, rep)
  
@@ -286,7 +283,7 @@ index 644a1fe..e1240a4 100644
          # LOG.debug(req)
          dpid = req.dpid
  
-@@ -1008,9 +1030,12 @@ class Switches(app_manager.RyuApp):
+@@ -1008,9 +1033,12 @@ class Switches(app_manager.RyuApp):
              links = [link for link in self.links if link.src.dpid == dpid]
          rep = event.EventLinkReply(req.src, dpid, links)
          self.reply_to_request(req, rep)
@@ -299,7 +296,7 @@ index 644a1fe..e1240a4 100644
          dpid = req.dpid
          hosts = []
          if dpid is None:
-@@ -1021,3 +1046,18 @@ class Switches(app_manager.RyuApp):
+@@ -1021,3 +1049,18 @@ class Switches(app_manager.RyuApp):
  
          rep = event.EventHostReply(req.src, dpid, hosts)
          self.reply_to_request(req, rep)
